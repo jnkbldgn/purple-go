@@ -26,3 +26,7 @@ func readInput(preview string, numeric *float64) {
 func printValue(value float64) {
 	fmt.Printf("Курс EUR к RUB: %.2f\n", value)
 }
+
+func calcRub(sum int64, usd float64, eur float64) float64 {
+	return 0.0
+}
