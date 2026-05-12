@@ -1,32 +1,103 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"maps"
+	"slices"
+	"strings"
+)
+
+const usdInEur = 0.85
+const usdInRub = 74.3
+
+var currencyList = map[string]map[string]float64{
+	"USD": {
+		"EUR": usdInEur,
+		"RUB": usdInRub,
+	},
+	"EUR": {
+		"USD": 1 / usdInEur,
+		"RUB": (1 / usdInEur) * usdInRub,
+	},
+	"RUB": {
+		"USD": 1 / usdInRub,
+		"EUR": 1 / ((1 / usdInEur) * usdInRub),
+	},
+}
 
 func main() {
-	var USD_EUR float64
-	var USD_RUB float64
+	inCurrency, outCurrency, sumCurrency := readInput()
 
-	readInput("Введите курс USD к EUR: ", &USD_EUR)
-	readInput("Введите курс USD к RUB: ", &USD_RUB)
+	result := convertSum(sumCurrency, inCurrency, outCurrency)
 
-	var EUR_RUB = (1 / USD_EUR) * USD_RUB
-
-	printValue(EUR_RUB)
+	fmt.Printf("Итого: %f %s\n", result, outCurrency)
 }
 
-func readInput(preview string, numeric *float64) {
-	fmt.Print(preview)
-	_, err := fmt.Scan(numeric)
+func readInputCurrency(welcome string, availableList []string) string {
+	var currency string
+	for {
+		fmt.Printf("%s %v ", welcome, availableList)
+		_, errorInput := fmt.Scan(&currency)
 
-	if err != nil {
-		fmt.Println("Ошибка ввода")
+		if errorInput != nil {
+			fmt.Println("Ошибка ввода! Повторите еще раз.")
+			continue
+		}
+
+		currency = strings.ToUpper(currency)
+		isHas := slices.Contains(availableList, currency)
+
+		if !isHas {
+			fmt.Printf("Ошибка ввода! Список доступных валют: %v\n", availableList)
+			continue
+		}
+		break
 	}
+
+	return currency
 }
 
-func printValue(value float64) {
-	fmt.Printf("Курс EUR к RUB: %.2f\n", value)
+func readInputSum(welcome string) float64 {
+	var sum float64
+	for {
+		fmt.Print(welcome)
+		_, errorInput := fmt.Scan(&sum)
+
+		if errorInput != nil {
+			fmt.Println("Ошибка ввода! Повторите еще раз.")
+			continue
+		}
+
+		break
+	}
+
+	return sum
 }
 
-func calcRub(sum int64, usd float64, eur float64) float64 {
-	return 0.0
+func readInput() (string, string, float64) {
+	availableList := slices.Collect(maps.Keys(currencyList))
+
+	inCurrency := readInputCurrency("Введите исходную валюту:", availableList)
+	sumCurrency := readInputSum("Введите сумму для конвертации: ")
+
+	inCurrencyIndex := slices.Index(availableList, inCurrency)
+
+	if inCurrencyIndex >= 0 {
+		availableList = slices.Delete(availableList, inCurrencyIndex, inCurrencyIndex+1)
+	}
+	outCurrency := readInputCurrency("Введите целевую валюту:", availableList)
+
+	return inCurrency, outCurrency, sumCurrency
+}
+
+func convertSum(sum float64, inCurrency string, outCurrency string) float64 {
+	if currencyList[inCurrency] == nil {
+		panic("Неверная исходная валюте")
+	}
+
+	if currencyList[inCurrency][outCurrency] == 0 {
+		panic("Неверная целевая валюта")
+	}
+
+	return sum * currencyList[inCurrency][outCurrency]
 }
