@@ -109,12 +109,12 @@ func calcMedian(sli []float64) float64 {
 	slices.Sort(sli)
 
 	if len(sli)%2 == 0 {
-		return sli[len(sli)/2]
+		index := len(sli) / 2
+
+		return (sli[index] + sli[index+1]) / 2
 	}
 
-	index := len(sli) / 2
-
-	return (sli[index] + sli[index+1]) / 2
+	return sli[len(sli)/2]
 }
 
 func calcResult(operation string, numbers []float64) float64 {
