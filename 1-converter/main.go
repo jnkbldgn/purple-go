@@ -10,18 +10,24 @@ import (
 const usdInEur = 0.85
 const usdInRub = 74.3
 
+const eurInUsd = 1 / usdInEur
+const eurInRub = eurInUsd * usdInRub
+
+const rubInUsd = 1 / usdInRub
+const rubInEur = 1 / eurInRub
+
 var currencyList = map[string]map[string]float64{
 	"USD": {
 		"EUR": usdInEur,
 		"RUB": usdInRub,
 	},
 	"EUR": {
-		"USD": 1 / usdInEur,
-		"RUB": (1 / usdInEur) * usdInRub,
+		"USD": eurInUsd,
+		"RUB": eurInRub,
 	},
 	"RUB": {
-		"USD": 1 / usdInRub,
-		"EUR": 1 / ((1 / usdInEur) * usdInRub),
+		"USD": rubInUsd,
+		"EUR": rubInEur,
 	},
 }
 
@@ -59,6 +65,8 @@ func readInputCurrency(welcome string, availableList []string) string {
 
 func readInputSum(welcome string) float64 {
 	var sum float64
+
+Loop:
 	for {
 		fmt.Print(welcome)
 		_, errorInput := fmt.Scan(&sum)
@@ -68,7 +76,7 @@ func readInputSum(welcome string) float64 {
 			continue
 		}
 
-		break
+		break Loop
 	}
 
 	return sum
