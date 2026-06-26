@@ -7,30 +7,38 @@ import (
 	"strings"
 )
 
+type CurrencyListMap = map[string]map[string]float64
+
 const usdInEur = 0.85
 const usdInRub = 74.3
 
-var currencyList = map[string]map[string]float64{
-	"USD": {
-		"EUR": usdInEur,
-		"RUB": usdInRub,
-	},
-	"EUR": {
-		"USD": 1 / usdInEur,
-		"RUB": (1 / usdInEur) * usdInRub,
-	},
-	"RUB": {
-		"USD": 1 / usdInRub,
-		"EUR": 1 / ((1 / usdInEur) * usdInRub),
-	},
-}
+const eurInUsd = 1 / usdInEur
+const eurInRub = eurInUsd * usdInRub
+
+const rubInUsd = 1 / usdInRub
+const rubInEur = 1 / eurInRub
 
 func main() {
-	inCurrency, outCurrency, sumCurrency := readInput()
+	var currencyList = CurrencyListMap{
+		"USD": {
+			"EUR": usdInEur,
+			"RUB": usdInRub,
+		},
+		"EUR": {
+			"USD": eurInUsd,
+			"RUB": eurInRub,
+		},
+		"RUB": {
+			"USD": rubInUsd,
+			"EUR": rubInEur,
+		},
+	}
 
-	result := convertSum(sumCurrency, inCurrency, outCurrency)
+	inCurrency, outCurrency, sumCurrency := readInput(&currencyList)
 
-	fmt.Printf("Итого: %f %s\n", result, outCurrency)
+	result := convertSum(sumCurrency, inCurrency, outCurrency, &currencyList)
+
+	fmt.Printf("Итого: %.2f %s\n", result, outCurrency)
 }
 
 func readInputCurrency(welcome string, availableList []string) string {
@@ -59,6 +67,8 @@ func readInputCurrency(welcome string, availableList []string) string {
 
 func readInputSum(welcome string) float64 {
 	var sum float64
+
+Loop:
 	for {
 		fmt.Print(welcome)
 		_, errorInput := fmt.Scan(&sum)
@@ -68,14 +78,14 @@ func readInputSum(welcome string) float64 {
 			continue
 		}
 
-		break
+		break Loop
 	}
 
 	return sum
 }
 
-func readInput() (string, string, float64) {
-	availableList := slices.Collect(maps.Keys(currencyList))
+func readInput(currencyList *CurrencyListMap) (string, string, float64) {
+	availableList := slices.Collect(maps.Keys(*currencyList))
 
 	inCurrency := readInputCurrency("Введите исходную валюту:", availableList)
 	sumCurrency := readInputSum("Введите сумму для конвертации: ")
@@ -90,14 +100,14 @@ func readInput() (string, string, float64) {
 	return inCurrency, outCurrency, sumCurrency
 }
 
-func convertSum(sum float64, inCurrency string, outCurrency string) float64 {
-	if currencyList[inCurrency] == nil {
+func convertSum(sum float64, inCurrency string, outCurrency string, currencyList *CurrencyListMap) float64 {
+	if (*currencyList)[inCurrency] == nil {
 		panic("Неверная исходная валюте")
 	}
 
-	if currencyList[inCurrency][outCurrency] == 0 {
+	if (*currencyList)[inCurrency][outCurrency] == 0 {
 		panic("Неверная целевая валюта")
 	}
 
-	return sum * currencyList[inCurrency][outCurrency]
+	return sum * (*currencyList)[inCurrency][outCurrency]
 }
